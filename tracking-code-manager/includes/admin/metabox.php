@@ -75,6 +75,10 @@ add_action( 'add_meta_boxes', 'tcmp_add_meta_box' );
 function tcmp_add_meta_box() {
 	global $tcmp;
 
+	if (!current_user_can('unfiltered_html')) {
+		return;
+	}
+
 	$free    = array( 'post', 'page' );
 	$options = $tcmp->options->getMetaboxPostTypes();
 	$screens = array();
@@ -125,6 +129,10 @@ function tcmp_edit_snippet_array( $post, &$snippet, $prefix, $diff ) {
 add_action( 'save_post', 'tcmp_save_meta_box_data' );
 function tcmp_save_meta_box_data( $post_id ) {
 	global $tcmp;
+
+	if (!current_user_can('unfiltered_html')) {
+		return;
+	}
 
 	//in case of custom post type edit_ does not exist
 	//if (!current_user_can('edit_'.$post_type, $post_id)) {

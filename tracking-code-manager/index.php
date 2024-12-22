@@ -6,7 +6,7 @@ Description: A plugin to manage ALL your tracking code and conversion pixels, si
 Author: Data443
 Author URI: https://data443.com/
 Email: support@data443.com
-Version: 2.3.0
+Version: 2.4.0
 Requires at least: 3.6.0
 Requires PHP: 5.6
 */
@@ -23,7 +23,7 @@ define( 'TCMP_PLUGIN_PREFIX', 'TCMP_' );
 define( 'TCMP_PLUGIN_FILE', __FILE__ );
 define( 'TCMP_PLUGIN_SLUG', 'tracking-code-manager' );
 define( 'TCMP_PLUGIN_NAME', 'Tracking Code Manager' );
-define( 'TCMP_PLUGIN_VERSION', '2.3.0' );
+define( 'TCMP_PLUGIN_VERSION', '2.4.0' );
 define( 'TCMP_PLUGIN_AUTHOR', 'IntellyWP' );
 
 define( 'TCMP_PLUGIN_DIR', dirname( __FILE__ ) . '/' );
