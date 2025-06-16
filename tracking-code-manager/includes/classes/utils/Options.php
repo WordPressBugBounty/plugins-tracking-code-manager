@@ -4,8 +4,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class TCMP_Options {
-	public function __construct() {
 
+	private $request_data;
+
+	public function __construct() {
+		$this->request_data = array();
 	}
 
 	//Cache
@@ -104,15 +107,24 @@ class TCMP_Options {
 		}
 	}
 	private function getRequest( $key, $default = false ) {
-		$key    = $this->get_key( $key );
 		$result = $default;
-		if ( isset( $_POST[ $key ] ) ) {
-			if ( is_object( $_POST[ $key ] ) ) {
-				$result = clone $_POST[ $key ];
-			} else {
-				$result = $_POST[ $key ];
+		if ( isset($this->request_data[ $key ]) ) {
+				if ( is_object( $this->request_data[ $key ] ) ) {
+					$result = clone $this->request_data[ $key ];
+				} else {
+					$result = $this->request_data[ $key ];
+				}
+				$result = $this->recursive_wp_kses( $result );
+		} else {
+			$key    = $this->get_key( $key );
+			if ( isset( $_POST[ $key ] ) ) {
+				if ( is_object( $_POST[ $key ] ) ) {
+					$result = clone $_POST[ $key ];
+				} else {
+					$result = $_POST[ $key ];
+				}
+				$result = $this->recursive_wp_kses( $result );
 			}
-			$result = $this->recursive_wp_kses( $result );
 		}
 		return $result;
 	}
@@ -136,8 +148,7 @@ class TCMP_Options {
 	}
 
 	private function setRequest( $key, $value ) {
-		$key           = $this->get_key( $key );
-		$_POST[ $key ] = $value;
+		$this->request_data[ $key ] = $value;
 	}
 
 	public function isPluginFirstInstall() {

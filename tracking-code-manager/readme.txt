@@ -2,9 +2,10 @@
 Contributors: IntellyWP, Data443
 Tags: track google ad, profit google ad, map google ads, deliver content by ad, UTM management
 Requires at least: 2.7
-Tested up to: 6.7
-Stable tag: 2.4.0
+Tested up to: 6.8
 Requires PHP: 5.6
+Stable tag: trunk
+License: MIT
 
 A plugin to manage ALL of your tracking code and conversion pixels. Compatible with Facebook Ads, Google Adwords, WooCommerce, Easy Digital Downloads, ..
 
@@ -67,6 +68,10 @@ For documentation click here: [https://intellywp.com/docs/category/tracking-code
 > Describe the steps to reproduce the bug and we will be happy to help!<br>
 > To report a bug use the form at http://intellywp.com/report-a-bug/
 
+= How can I report security bugs? =
+
+You can report security bugs through the Patchstack Vulnerability Disclosure Program. The Patchstack team helps validate, triage and handle any security vulnerabilities. [Report a security vulnerability.]( https://patchstack.com/database/vdp/9e5fbdba-1b65-4d91-9d46-9849cf43373a )
+
 = Do you have a video that show me the plugin working? =
 
 Sure! Click on the link [http://intellywp.com/tracking-code-manager/](http://intellywp.com/tracking-code-manager/?utm_source=wordpress-org&utm_medium=plugin-page&utm_campaign=TCM) for a full explanation. This is our official webpage, you will see the plugin in action, with the possibility to buy PREMIUM version and have full support.
@@ -111,6 +116,12 @@ Have a look at the source code of your page (search for: Tracking Code Manager) 
 == Changelog ==
 
 For detailed release notes, see our documentation here: [https://intellywp.com/docs/category/tracking-code-manager/](https://intellywp.com/docs/category/tracking-code-manager/).
+
+= 2.5.0 =
+*Release Date - 2025-6-16*
+
+* Test plugin against PHP 8.4.4
+* RDU-1630 Avoid writing to $_POST superglobal and fix null argument warning
 
 = 2.4.0 =
 *Release Date - 2024-12-22*

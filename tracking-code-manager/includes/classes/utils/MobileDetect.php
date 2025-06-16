@@ -652,8 +652,8 @@ class TCMP_Mobile_Detect {
 	 *                          from the $headers array instead.
 	 */
 	public function __construct(
-		array $headers = null,
-		$userAgent = null
+		array $headers = [],
+		$userAgent = ''
 	) {
 		$this->setHttpHeaders( $headers );
 		$this->setUserAgent( $userAgent );
@@ -1183,6 +1183,9 @@ class TCMP_Mobile_Detect {
 	 * @todo: search in the HTTP headers too.
 	 */
 	public function match( $regex, $userAgent = null ) {
+		if ( empty( $userAgent ) && empty( $this->userAgent ) ) {
+			return false;
+		}
 		$match = (bool) preg_match( sprintf( '#%s#is', $regex ), ( false === empty( $userAgent ) ? $userAgent : $this->userAgent ), $matches );
 		// If positive match is found, store the results for debug.
 		if ( $match ) {

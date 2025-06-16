@@ -5,7 +5,7 @@ function tcmp_head() {
 	global $post, $tcmp;
 
 	$tcmp->options->setPostShown( null );
-	if ( $post && isset( $post->ID ) && ( is_page( $post->ID ) || is_single( $post->ID ) ) ) {
+	if ( $post && isset( $post->ID ) && $post->ID > 0 ) {
 		$tcmp->options->setPostShown( $post );
 		$tcmp->log->info( 'POST ID=%s IS SHOWN', $post->ID );
 	}
