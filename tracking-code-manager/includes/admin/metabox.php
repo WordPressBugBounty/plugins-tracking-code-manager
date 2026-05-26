@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 function tcmp_ui_metabox( $post ) {
 	global $tcmp;
 	// Add an nonce field so we can check for it later.

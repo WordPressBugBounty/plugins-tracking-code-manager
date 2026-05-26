@@ -1,5 +1,5 @@
 <?php
-//per agganciarsi ogni volta che viene scritto un contenuto
+if ( ! defined( 'ABSPATH' ) ) exit;
 add_filter( 'wp_head', 'tcmp_head', get_option( 'TCM_HookPriority', TCMP_HOOK_PRIORITY_DEFAULT ) );
 function tcmp_head() {
 	global $post, $tcmp;

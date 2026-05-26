@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'TCMP_WHATSNEW_VERSION', 8 );
 function tcmp_ui_whats_new() {
 	global $tcmp;

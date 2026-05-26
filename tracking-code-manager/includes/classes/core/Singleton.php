@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 class TCMP_Singleton {
 	var $lang;
 	var $utils;

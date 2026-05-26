@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 function tcmp_ui_track() {
 	global $tcmp;
 

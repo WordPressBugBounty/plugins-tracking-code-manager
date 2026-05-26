@@ -1,10 +1,10 @@
 === Tracking Code Manager ===
 Contributors: IntellyWP, Data443
 Tags: track google ad, profit google ad, map google ads, deliver content by ad, UTM management
-Requires at least: 2.7
-Tested up to: 6.8
+Requires at least: 3.6.0
+Tested up to: 7.0
 Requires PHP: 5.6
-Stable tag: trunk
+Stable tag: 2.6.0
 License: MIT
 
 A plugin to manage ALL of your tracking code and conversion pixels. Compatible with Facebook Ads, Google Adwords, WooCommerce, Easy Digital Downloads, ..
@@ -116,6 +116,11 @@ Have a look at the source code of your page (search for: Tracking Code Manager) 
 == Changelog ==
 
 For detailed release notes, see our documentation here: [https://intellywp.com/docs/category/tracking-code-manager/](https://intellywp.com/docs/category/tracking-code-manager/).
+
+= 2.6.0 =
+*Release Date - 2026-5-20*
+
+* Test plugin against WordPress 7.0
 
 = 2.5.0 =
 *Release Date - 2025-6-16*

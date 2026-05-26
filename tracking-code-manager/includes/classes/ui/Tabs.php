@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 class TCMP_Tabs {
 	private $tabs = array();
 

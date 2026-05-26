@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 spl_autoload_register( 'tcmp_autoload' );
 function tcmp_autoload( $class ) {
 	$root = dirname( __FILE__ ) . '/includes/classes/';

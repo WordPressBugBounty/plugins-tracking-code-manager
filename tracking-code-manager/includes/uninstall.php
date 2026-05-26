@@ -1,5 +1,5 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) exit;
 function tcmp_uninstall( $networkwide = null ) {
 	global $wpdb;
 

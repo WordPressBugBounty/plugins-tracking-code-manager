@@ -1,5 +1,5 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) exit;
 register_activation_hook( TCMP_PLUGIN_FILE, 'tcmp_install' );
 function tcmp_install( $networkwide = null ) {
 	global $wpdb, $tcmp;

@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 function tcmp_notice_pro_features() {
 	global $tcmp;
 	?>
