@@ -161,8 +161,17 @@ class TCMP_Utils {
 	}
 
 	public function twitter( $name ) {
+		// Self-contained X (formerly Twitter) follow link. The old markup relied on
+		// Twitter's platform.twitter.com/widgets.js to turn a `.twitter-follow-button`
+		// anchor into a logo button; that widget was retired after the X rebrand, so it
+		// rendered as bare text with no logo. Inline the X mark as SVG instead — no
+		// external script, works offline, and shows the correct current brand.
+		// Styling lives in the .tcmp-x-follow rules in assets/css/style.css.
 		?>
-		<a href="https://twitter.com/<?php echo esc_attr( $name ); ?>" class="twitter-follow-button" data-show-count="false" data-dnt="true">Follow @<?php echo esc_attr( $name ); ?></a>
+		<a href="https://x.com/<?php echo esc_attr( $name ); ?>" target="_blank" rel="noopener noreferrer" class="tcmp-x-follow">
+			<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+			<span>Follow @<?php echo esc_html( $name ); ?></span>
+		</a>
 		<?php
 	}
 
@@ -372,9 +381,9 @@ class TCMP_Utils {
 		global $tcmp_allowed_html_tags;
 		$result = $default;
 		if ( isset( $_POST[ $name ] ) ) {
-			$result = $this->sanitize_post_or_get( $_POST[ $name ] );
+			$result = $this->sanitize_post_or_get( $_POST[ $name ], $name );
 		} elseif ( isset( $_GET[ $name ] ) ) {
-			$result = $this->sanitize_post_or_get( $_GET[ $name ] );
+			$result = $this->sanitize_post_or_get( $_GET[ $name ], $name );
 		}
 
 		if ( is_string( $result ) ) {
@@ -387,8 +396,12 @@ class TCMP_Utils {
 		return $result;
 	}
 
-	private function sanitize_post_or_get( $array ) {
+	private function sanitize_post_or_get( $array, $name = '' ) {
 		global $tcmp_allowed_html_tags;
+		// The snippet "code" fields hold raw tracking markup on purpose; they are
+		// sanitized on output via TCMP_Manager::esc_js_code(). Everything else is
+		// treated as plain text so that qs() is safe by default (see F-06).
+		$is_code = ( 'code' === $name || 'tcmp_code' === $name );
 		if ( is_array( $array ) ) {
 			foreach ( $array as $k => &$v ) {
 				if ( 'code' == $k ) {
@@ -397,6 +410,9 @@ class TCMP_Utils {
 					$v = sanitize_text_field( $v );
 				}
 			}
+			unset( $v );
+		} elseif ( is_string( $array ) && ! $is_code ) {
+			$array = sanitize_text_field( $array );
 		}
 		return $array;
 	}
@@ -404,7 +420,7 @@ class TCMP_Utils {
 	var $_taxonomyType;
 
 	function query( $query, $options = null ) {
-		global $tcmp, $wpdb;
+		global $tcmp;
 
 		$parent   = '';
 		$defaults = array(
@@ -441,10 +457,27 @@ class TCMP_Utils {
 				$function = '';
 				switch ( $query ) {
 					case TCMP_QUERY_POSTS_OF_TYPE:
-						//$options=array('posts_per_page'=>-1, 'post_type'=>$args['post_type']);
-						//$q=get_posts($options);
-						$sql      = 'SELECT ID, post_title FROM ' . $wpdb->prefix . "posts WHERE post_status='publish' AND post_type='" . $options['type'] . "' ORDER BY post_title";
-						$q        = $wpdb->get_results( $sql );
+						// get_posts() instead of a direct $wpdb query: it goes
+						// through WordPress's object cache and avoids the
+						// DirectDatabaseQuery / NoCaching warnings. The WP_Post
+						// objects it returns expose the same ID and post_title
+						// fields the loop below reads, and get_posts() already
+						// sets no_found_rows, so this is no heavier than the
+						// two-column SELECT it replaces. The empty-type check keeps
+						// the old semantics: the previous `post_type = ''` SELECT
+						// matched nothing, whereas get_posts() would silently fall
+						// back to listing ordinary posts.
+						if ( '' !== (string) $options['type'] ) {
+							$q = get_posts(
+								array(
+									'post_type'      => $options['type'],
+									'post_status'    => 'publish',
+									'posts_per_page' => -1,
+									'orderby'        => 'title',
+									'order'          => 'ASC',
+								)
+							);
+						}
 						$function = 'get_permalink';
 						break;
 					case TCMP_QUERY_CATEGORIES:
@@ -1614,11 +1647,6 @@ class TCMP_Utils {
 		return $data;
 	}
 
-	function isAdminUser() {
-		//https://wordpress.org/support/topic/how-to-check-admin-right-without-include-pluggablephp
-		return true;
-	}
-
 	function isPluginPage() {
 		global $tcmp;
 		$page   = tcmp_sqs( 'page' );
@@ -1971,17 +1999,15 @@ class TCMP_Utils {
 	}
 
 	public function getVisitorIpAddress() {
+		// Only REMOTE_ADDR is set by the web server and cannot be spoofed by the
+		// client. HTTP_CLIENT_IP / HTTP_X_FORWARDED_FOR are attacker-controllable
+		// request headers and must never be trusted for a security decision, so
+		// they are intentionally NOT consulted here. Also calls the real instance
+		// method $this->validate_ip() (the previous global validate_ip() call
+		// would have fatal-errored). (See F-12.)
 		$ip = '';
-		if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-			$ip = validate_ip( $_SERVER['HTTP_CLIENT_IP'] );
-		}
-
-		if ( '' == $ip && ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-			$ip = validate_ip( $_SERVER['HTTP_X_FORWARDED_FOR'] );
-		}
-
-		if ( '' == $ip ) {
-			$ip = validate_ip( $_SERVER['REMOTE_ADDR'] );
+		if ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
+			$ip = $this->validate_ip( sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) );
 		}
 		return $ip;
 	}

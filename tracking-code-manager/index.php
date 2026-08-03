@@ -6,7 +6,7 @@ Description: A plugin to manage ALL your tracking code and conversion pixels, si
 Author: Data443
 Author URI: https://data443.com/
 Email: support@data443.com
-Version: 2.6.0
+Version: 2.7.0
 Requires at least: 3.6.0
 Requires PHP: 5.6
 */
@@ -25,7 +25,7 @@ define( 'TCMP_PLUGIN_PREFIX', 'TCMP_' );
 define( 'TCMP_PLUGIN_FILE', __FILE__ );
 define( 'TCMP_PLUGIN_SLUG', 'tracking-code-manager' );
 define( 'TCMP_PLUGIN_NAME', 'Tracking Code Manager' );
-define( 'TCMP_PLUGIN_VERSION', '2.6.0' );
+define( 'TCMP_PLUGIN_VERSION', '2.7.0' );
 define( 'TCMP_PLUGIN_AUTHOR', 'IntellyWP' );
 
 define( 'TCMP_PLUGIN_DIR', dirname( __FILE__ ) . '/' );
@@ -44,7 +44,7 @@ define( 'TCMP_QUERY_CONVERSION_PLUGINS', 5 );
 define( 'TCMP_QUERY_TAXONOMY_TYPES', 6 );
 define( 'TCMP_QUERY_TAXONOMIES_OF_TYPE', 7 );
 
-define( 'TCMP_INTELLYWP_ENDPOINT', 'http://www.intellywp.com/wp-content/plugins/intellywp-manager/data.php' );
+define( 'TCMP_INTELLYWP_ENDPOINT', 'https://www.intellywp.com/wp-content/plugins/intellywp-manager/data.php' );
 define( 'TCMP_PAGE_FAQ', 'http://www.intellywp.com/tracking-code-manager' );
 define( 'TCMP_PAGE_PREMIUM', 'http://www.intellywp.com/tracking-code-manager' );
 define( 'TCMP_PAGE_MANAGER', admin_url() . 'options-general.php?page=' . TCMP_PLUGIN_SLUG );

@@ -363,12 +363,17 @@ class TCMP_Options {
 		$type   = sanitize_text_field( $type );
 		$result = false;
 		$array  = $this->getRequest( $type . 'Messages', array() );
-		// These messages are built by the plugin and have been already sanitized.
-		// Trying to sanitize them again will break plugin functionality since some of the messages contain html.
 		if ( is_array( $array ) && count( $array ) > 0 ) {
 			$result = true;
+			// Escape at the sink so safety no longer depends on every caller
+			// pre-escaping its message arguments (see F-04). wp_kses_post keeps
+			// the intentional markup (links, styled spans) some notices embed
+			// while neutralising anything dangerous. It now wraps the wpautop()
+			// result rather than each message, so the escaping is applied to
+			// everything that is actually echoed.
+			$html = wpautop( implode( "\n", $array ) );
 			?>
-			<div class="tcmp-box-<?php echo strtolower( $type ); ?>"><?php echo wpautop( implode( "\n", $array ) ); ?></div>
+			<div class="tcmp-box-<?php echo esc_attr( strtolower( $type ) ); ?>"><?php echo wp_kses_post( $html ); ?></div>
 			<?php
 		}
 		if ( $clean ) {

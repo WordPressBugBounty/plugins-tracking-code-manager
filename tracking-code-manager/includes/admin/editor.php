@@ -32,7 +32,7 @@ function tcmp_notice_pro_features() {
 			?>
 			<div style="clear:both; margin-top: 2px;"></div>
 			<div style="float:left; vertical-align:middle; height:24px; margin-right:5px; margin-top:-5px;">
-				<img src="<?php echo TCMP_PLUGIN_IMAGES_URI; ?>tick.png" />
+				<img src="<?php echo esc_url( TCMP_PLUGIN_IMAGES_URI . 'tick.png' ); ?>" />
 			</div>
 			<div style="float:left; vertical-align:middle; height:24px;">
 				<?php $tcmp->lang->P( 'Notice.ProFeature' . $i, $q ); ?>
@@ -48,7 +48,7 @@ function tcmp_notice_pro_features() {
 			$url = TCMP_PAGE_PREMIUM . '?utm_source=free-users&utm_medium=wp-cta&utm_campaign=wp-plugin';
 			?>
 			<a href="<?php echo esc_url( $url ); ?>" target="_blank">
-				<b><?php esc_html( $tcmp->lang->P( 'Notice.ProCTA' ) ); ?></b>
+				<b><?php $tcmp->lang->P( 'Notice.ProCTA' ); ?></b>
 			</a>
 		</div>
 		<div style="height:10px; clear:both;"></div>

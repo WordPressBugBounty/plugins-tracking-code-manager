@@ -1020,7 +1020,10 @@ class TCMP_Mobile_Detect {
 	public function __call( $name, $arguments ) {
 		// make sure the name starts with 'is', otherwise
 		if ( substr( $name, 0, 2 ) !== 'is' ) {
-			throw new BadMethodCallException( "No such method exists: $name" );
+			// Deviation from upstream Mobile_Detect: the message interpolates the
+			// called method name, so it is escaped in case the exception text is
+			// ever surfaced to a browser.
+			throw new BadMethodCallException( esc_html( "No such method exists: $name" ) );
 		}
 
 		$this->setDetectionType( self::DETECTION_TYPE_MOBILE );

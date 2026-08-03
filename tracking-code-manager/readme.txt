@@ -4,7 +4,7 @@ Tags: track google ad, profit google ad, map google ads, deliver content by ad, 
 Requires at least: 3.6.0
 Tested up to: 7.0
 Requires PHP: 5.6
-Stable tag: 2.6.0
+Stable tag: 2.7.0
 License: MIT
 
 A plugin to manage ALL of your tracking code and conversion pixels. Compatible with Facebook Ads, Google Adwords, WooCommerce, Easy Digital Downloads, ..
@@ -116,6 +116,11 @@ Have a look at the source code of your page (search for: Tracking Code Manager) 
 == Changelog ==
 
 For detailed release notes, see our documentation here: [https://intellywp.com/docs/category/tracking-code-manager/](https://intellywp.com/docs/category/tracking-code-manager/).
+
+= 2.7.0 =
+*Release Date - 2026-7-28*
+
+* Do a full security audit on this plugin and make various changes.
 
 = 2.6.0 =
 *Release Date - 2026-5-20*

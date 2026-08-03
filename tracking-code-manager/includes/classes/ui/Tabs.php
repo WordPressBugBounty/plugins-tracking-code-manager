@@ -7,7 +7,11 @@ class TCMP_Tabs {
 	}
 	public function init() {
 		global $tcmp;
-		if ( $tcmp->utils->isAdminUser() ) {
+		// Only register the admin-menu machinery in the admin context; the menu
+		// callback itself still enforces the manage_options capability (and the
+		// multisite unfiltered_html gate). Replaces the misleading always-true
+		// isAdminUser() stub (see F-13).
+		if ( is_admin() ) {
 			add_action( 'admin_menu', array( &$this, 'attach_menu' ) );
 			add_filter( 'plugin_action_links', array( &$this, 'plugin_actions' ), 10, 2 );
 			if ( $tcmp->utils->isPluginPage() ) {
@@ -183,10 +187,14 @@ class TCMP_Tabs {
 						if (!current_user_can('unfiltered_html'))
 						{
 							// Only the Super-Admin role has unfiltered_html by default
-							echo '<div class="tcmp-box-error">';
-							echo '<p>For a multisite only, changing plugin settings requires the unfiltered_html capability.</p>';
-							echo '</div>';
-							die;
+							$refusal = 'For a multisite only, changing plugin settings requires the unfiltered_html capability.';
+							echo '<div class="tcmp-box-error"><p>' . esc_html( $refusal ) . '</p></div>';
+							// wp_die() rather than a bare die(): it ends the request with a
+							// themed, filterable error page instead of truncating the admin
+							// document mid-render, and it matches how change_order() already
+							// refuses. It is also interceptable, which is what makes this
+							// branch reachable from the test suite (see TabPageTest).
+							wp_die( esc_html( $refusal ) );
 						}
 					}
 					switch ( $tab ) {
@@ -318,7 +326,7 @@ class TCMP_Tabs {
 					<?php
 				} else {
 					?>
-					<a style="float:left; margin-left:10px; <?php echo esc_attr( $style ); ?>" class="nav-tab <?php echo esc_attr( $active ); ?>" target="<?php echo esc_attr( $target ); ?>" href="?page=<?php echo TCMP_PLUGIN_SLUG; ?>&tab=<?php echo esc_attr( $k ); ?>"><?php echo esc_attr( $v ); ?></a>
+					<a style="float:left; margin-left:10px; <?php echo esc_attr( $style ); ?>" class="nav-tab <?php echo esc_attr( $active ); ?>" target="<?php echo esc_attr( $target ); ?>" href="<?php echo esc_url( '?page=' . TCMP_PLUGIN_SLUG . '&tab=' . $k ); ?>"><?php echo esc_attr( $v ); ?></a>
 					<?php
 				}
 			}

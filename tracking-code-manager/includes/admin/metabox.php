@@ -28,7 +28,7 @@ function tcmp_ui_metabox( $post ) {
 	<div>
 		<?php $tcmp->lang->P( 'Select existing Tracking Code' ); ?>..
 	</div>
-	<input type="hidden" name="tcmp_all_ids" value="<?php echo implode( ',', $all_ids ); ?>" />
+	<input type="hidden" name="tcmp_all_ids" value="<?php echo esc_attr( implode( ',', $all_ids ) ); ?>" />
 
 	<div>
 		<?php
@@ -49,7 +49,7 @@ function tcmp_ui_metabox( $post ) {
 			?>
 			<input type="checkbox" class="tcmp-checkbox" name="tcmp_ids[]" value="<?php echo esc_attr( $id ); ?>" <?php echo esc_attr( $checked ); ?> <?php echo esc_attr( $disabled ); ?> />
 			<?php echo esc_attr( $snippet['name'] ); ?>
-			<a href="<?php echo TCMP_TAB_EDITOR_URI; ?>&id=<?php echo esc_attr( $id ); ?>" target="_blank">&nbsp;››</a>
+			<a href="<?php echo esc_url( TCMP_TAB_EDITOR_URI . '&id=' . $id ); ?>" target="_blank">&nbsp;››</a>
 			<br/>
 		<?php } ?>
 	</div>
@@ -135,11 +135,6 @@ function tcmp_save_meta_box_data( $post_id ) {
 		return;
 	}
 
-	//in case of custom post type edit_ does not exist
-	//if (!current_user_can('edit_'.$post_type, $post_id)) {
-	//    return;
-	//}
-
 	// If this is an autosave, our form has not been submitted, so we don't want to do anything.
 	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
 		return;
@@ -148,7 +143,15 @@ function tcmp_save_meta_box_data( $post_id ) {
 		return;
 	}
 	// Verify that the nonce is valid.
-	if ( ! wp_verify_nonce( $_POST['tcmp_meta_box_nonce'], 'tcmp_meta_box' ) ) {
+	if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['tcmp_meta_box_nonce'] ) ), 'tcmp_meta_box' ) ) {
+		return;
+	}
+
+	// Object-level authorization: only proceed if the current user can actually
+	// edit this specific post. The 'edit_post' meta capability is mapped by
+	// WordPress to the correct primitive capability for the post's type, so it
+	// works for custom post types too (see F-03).
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
 		return;
 	}
 

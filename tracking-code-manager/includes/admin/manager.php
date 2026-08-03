@@ -37,8 +37,8 @@ function tcmp_ui_manager() {
 	if ( count( $snippets ) > 0 ) { ?>
 		<div style="float:left;">
 			<form method="get" action="" style="margin:5px; float:left;">
-				<input type="hidden" name="page" value="<?php echo TCMP_PLUGIN_SLUG; ?>" />
-				<input type="hidden" name="tab" value="<?php echo TCMP_TAB_EDITOR; ?>" />
+				<input type="hidden" name="page" value="<?php echo esc_attr( TCMP_PLUGIN_SLUG ); ?>" />
+				<input type="hidden" name="tab" value="<?php echo esc_attr( TCMP_TAB_EDITOR ); ?>" />
 				<input type="submit" class="button-primary" value="<?php $tcmp->lang->P( 'Button.Add' ); ?>" />
 			</form>
 		</div>
@@ -74,9 +74,10 @@ function tcmp_ui_manager() {
 							$text     = 'Yes';
 							$question = 'QuestionActiveOff';
 						}
-						$text = '<span style="font-weight:bold; color:' . $color . '">' . $tcmp->lang->L( $text ) . '</span>';
+						$text       = '<span style="font-weight:bold; color:' . $color . '">' . $tcmp->lang->L( $text ) . '</span>';
+						$toggle_url = TCMP_TAB_MANAGER_URI . '&tcmp_nonce=' . wp_create_nonce( 'tcmp_toggle' ) . '&action=toggle&id=' . $snippet['id'];
 						?>
-						<a onclick="return confirm('<?php echo esc_attr( $tcmp->lang->L( $question ) ); ?>');" href="<?php echo TCMP_TAB_MANAGER_URI; ?>&tcmp_nonce=<?php echo esc_attr( wp_create_nonce( 'tcmp_toggle' ) ); ?>&action=toggle&id=<?php echo esc_attr( $snippet['id'] ); ?>">
+						<a onclick="return confirm('<?php echo esc_js( $tcmp->lang->L( $question ) ); ?>');" href="<?php echo esc_url( $toggle_url ); ?>">
 							<?php echo wp_kses( $text, $tcmp_allowed_html_tags ); ?>
 						</a>
 					</td>
@@ -92,14 +93,14 @@ function tcmp_ui_manager() {
 						} else {
 							$text = 'Conversion';
 						}
-						esc_html( $tcmp->lang->P( $text ) );
+						$tcmp->lang->P( $text );
 						?>
 					</td>
 					<td style="text-align:center;">
 						<input type="text" style="width:110px; text-align:center;" value='[tcm id="<?php echo esc_html( $snippet['id'] ); ?>"]' readonly="readonly" class="tcmp-select-onfocus" />
 					</td>
 					<td style="text-align:center;">
-						<input type="button" class="button button-secondary" value="<?php $tcmp->lang->P( 'Edit' ); ?>" onclick="location.href='<?php echo TCMP_TAB_EDITOR_URI; ?>&id=<?php echo esc_attr( $snippet['id'] ); ?>';"/>
+						<input type="button" class="button button-secondary" value="<?php $tcmp->lang->P( 'Edit' ); ?>" onclick="location.href='<?php echo esc_url( TCMP_TAB_EDITOR_URI . '&id=' . $snippet['id'] ); ?>';"/>
 						<input type="button" class="button button-secondary" value="<?php $tcmp->lang->P( 'Delete?' ); ?>" onclick="TCMP_btnDeleteClick(<?php echo esc_attr( $snippet['id'] ); ?>)"/>
 					</td>
 				</tr>

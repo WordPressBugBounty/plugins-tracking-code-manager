@@ -5,6 +5,11 @@ function tcmp_ui_track() {
 
 	$track = tcmp_sqs( 'track', '' );
 	if ( '' != $track ) {
+		// This GET toggle changes a setting AND triggers an outbound telemetry
+		// transmission, so it must be protected against CSRF with a nonce (F-02).
+		if ( ! $tcmp->check->nonce( 'tcmp_track' ) ) {
+			wp_die( esc_html( $tcmp->lang->L( 'Invalid nonce' ) ) );
+		}
 		$track = intval( $track );
 		$tcmp->options->setTrackingEnable( $track );
 		$tcmp->tracking->sendTracking( true );
@@ -13,9 +18,11 @@ function tcmp_ui_track() {
 	$uri = TCMP_TAB_SETTINGS_URI . '&track=';
 	if ( $tcmp->options->isTrackingEnable() ) {
 		$uri .= '0';
+		$uri  = wp_nonce_url( $uri, 'tcmp_track' );
 		$tcmp->options->pushSuccessMessage( 'EnableAllowTrackingNotice', $uri );
 	} else {
 		$uri .= '1';
+		$uri  = wp_nonce_url( $uri, 'tcmp_track' );
 		$tcmp->options->pushErrorMessage( 'DisableAllowTrackingNotice', $uri );
 	}
 	$tcmp->options->writeMessages();

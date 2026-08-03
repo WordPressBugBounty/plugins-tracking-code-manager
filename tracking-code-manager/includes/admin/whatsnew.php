@@ -23,12 +23,12 @@ function tcmp_ui_whats_new() {
 
 				<p class="tcmp-subheadline">Dynamic Conversion Values</p>
 				<p>Finally, Dynamic Conversion Values are now available for WooCommerce and Easy Digital Download. Now you can track the values of your conversions on <b>Google Adwords</b> and <b>Facebook Ads</b> (with the <b>New Pixel</b> and relative events like "Purchase" and others), and many other channels.</p>
-				<img src="<?php echo TCMP_PLUGIN_ASSETS_URI; ?>landing/tcmp-fb.png" />
+				<img src="<?php echo esc_url( TCMP_PLUGIN_ASSETS_URI . 'landing/tcmp-fb.png' ); ?>" />
 				<br>
 				<br>
 				<div style="float: right;">
-					<a class="button button-secondary" href="<?php echo TCMP_TAB_MANAGER_URI; ?>&hwb=1">CONTINUE USING FREE VERSION</a>
-					<a class="button button-primary" href="<?php echo TCMP_TAB_DOCS_DCV_URI; ?>?utm_campaign=whatsnew" target="_blank">SEE MORE ››</a>
+					<a class="button button-secondary" href="<?php echo esc_url( TCMP_TAB_MANAGER_URI . '&hwb=1' ); ?>">CONTINUE USING FREE VERSION</a>
+					<a class="button button-primary" href="<?php echo esc_url( TCMP_TAB_DOCS_DCV_URI . '?utm_campaign=whatsnew' ); ?>" target="_blank">SEE MORE ››</a>
 				</div>
 			</td>
 			<td valign="top" width="50%" style="border-left: 1px solid #44444E;">

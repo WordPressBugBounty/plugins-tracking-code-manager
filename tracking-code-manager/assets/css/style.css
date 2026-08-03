@@ -138,3 +138,77 @@ table .even {
     padding: 10px;
     border: 2px dashed red;
 }
+
+/* ==========================================================================
+   X (formerly Twitter) "Follow" button — brand pill, admin-header accessory.
+   Rendered by the plugin's Utils::twitter() helper; sits beside the "Rate us"
+   label + star rating in the settings-page header. Scoped under .tcmp-x-follow
+   so it is safe next to other admin styles and overrides the font-size the
+   anchor would otherwise inherit from the surrounding <h2>. The inline SVG uses
+   fill:currentColor, so one `color` paints both the label and the X mark.
+   ========================================================================== */
+.tcmp-x-follow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-sizing: border-box;
+    margin: 0 0 0 10px;
+    padding: 5px 12px;
+    border: 0;
+    border-radius: 9999px;
+    background-color: #000;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .15s ease;
+}
+.tcmp-x-follow,
+.tcmp-x-follow:link,
+.tcmp-x-follow:visited,
+.tcmp-x-follow:hover,
+.tcmp-x-follow:active,
+.tcmp-x-follow:focus {
+    color: #fff;
+    text-decoration: none;
+}
+.tcmp-x-follow span {
+    font-size: 13px;
+    line-height: 1;
+}
+.tcmp-x-follow svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    fill: currentColor;
+}
+.tcmp-x-follow:hover {
+    background-color: #1a1a1a;
+}
+.tcmp-x-follow:active {
+    background-color: #333;
+}
+.tcmp-x-follow:focus {
+    outline: 2px solid #2271b1;
+    outline-offset: 2px;
+    box-shadow: none;
+}
+.tcmp-x-follow:focus:not(:focus-visible) {
+    outline: none;
+}
+.tcmp-x-follow:focus-visible {
+    outline: 2px solid #2271b1;
+    outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .tcmp-x-follow {
+        transition: none;
+    }
+}

@@ -52,14 +52,25 @@ add_shortcode( 'tcmp', 'tcmp_shortcode' );
 add_shortcode( 'tcm', 'tcmp_shortcode' );
 function tcmp_shortcode( $atts, $content = '' ) {
 	global $tcmp;
-	extract( shortcode_atts( array( 'id' => false ), $atts ) );
+	// Assign explicitly instead of extract() on external input (see F-13).
+	$atts = shortcode_atts( array( 'id' => false ), $atts );
+	$id   = $atts['id'];
 
-	if ( ! isset( $id ) || ! $id ) {
+	if ( ! $id ) {
 		return '';
 	}
 
 	$snippet = $tcmp->manager->get( $id, true );
-	return $snippet['code'];
+	if ( ! is_array( $snippet ) || ! isset( $snippet['code'] ) ) {
+		return '';
+	}
+
+	// Run the snippet through the same output path as write_codes() instead of
+	// returning it raw, so the shortcode and the normal injection path cannot
+	// diverge (F-05). Note that this equalises the two paths; it does not make
+	// the shortcode safe to expose to lower-privileged authors, because the
+	// whitelist esc_js_code() applies permits <script> by design.
+	return $tcmp->manager->esc_js_code( $snippet['code'] );
 }
 
 function tcmp_ui_first_time() {

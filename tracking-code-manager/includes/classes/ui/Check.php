@@ -31,7 +31,7 @@ class TCMP_Check {
 	}
 	public function nonce( $action, $nonce = '_wpnonce' ) {
 		if ( isset( $_REQUEST[ $nonce ] ) ) {
-			$nonce = $_REQUEST[ $nonce ];
+			$nonce = sanitize_text_field( wp_unslash( $_REQUEST[ $nonce ] ) );
 		}
 		return wp_verify_nonce( $nonce, $action );
 	}

@@ -21,7 +21,7 @@ class TCMP_Manager {
 		return $result;
 	}
 	public function change_order() {
-		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'change_order' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'change_order' ) ) {
 			wp_send_json_error( 'Invalid nonce' );
 		}
 
@@ -350,23 +350,88 @@ class TCMP_Manager {
 			if ( false != $purchase && intval( $tcmp->options->getLicenseSiteCount() ) > 0 ) {
 				$text = $this->insert_dynamic_conversion_values( $purchase, $text );
 			}
+			// The snippet body is the site owner's own tracking markup (script
+			// tags, pixels), so escaping it here would defeat the entire purpose
+			// of the plugin. esc_js_code() is the output sink: it runs the text
+			// through wp_kses() against the whitelist in
+			// tcmp_free_wp_kses_tags_attrs.php unless the admin has explicitly
+			// opted out via the "Skip Code Sanitization" setting. That whitelist
+			// permits <script> and onload, so this filters the markup — it does
+			// not constrain what an editor-capable admin can execute. See the
+			// contract note on esc_js_code().
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Filtered by esc_js_code() via wp_kses(); see the contract note there.
 			echo $this->esc_js_code( $text );
 		}
 	}
 
-	private function esc_js_code( $text ) {
+	// Filter a snippet for output.
+	//
+	// What this sink does and does not guarantee: the snippet body is the site
+	// owner's own tracking markup, and the whitelist in
+	// tcmp_free_wp_kses_tags_attrs.php deliberately permits <script>, <iframe>
+	// and onload on every tag. A snippet author therefore has arbitrary
+	// JavaScript by design — that is the plugin's purpose, and it is governed by
+	// the capability gate on the editor (see F-09), not by this method. wp_kses()
+	// here is a well-formedness and whitelist pass over admin-authored markup; it
+	// is not a privilege boundary and must not be described as one.
+	//
+	// The entity decode below is scoped to <script> and <style> bodies, and that
+	// scope is load-bearing. wp_kses() entity-encodes '&' wherever it appears as
+	// text, so a saved "a && b" or a GTM "?id=x&l=dataLayer" comes back as
+	// "&amp;". Inside <script>/<style> the browser does NOT decode entities, so
+	// leaving them encoded breaks the snippet; in an attribute value or in HTML
+	// text the browser DOES decode them, so kses's encoding is both correct and
+	// necessary there. Decoding everywhere — as this method used to — undid the
+	// neutralization kses had just applied, letting a quote escape its attribute
+	// and letting pre-encoded "&lt;script&gt;" text become a live tag.
+	public function esc_js_code( $text ) {
 		global $tcmp;
 		global $tcmp_allowed_html_tags;
 
 		if ( ! $tcmp->options->getSkipCodeSanitization() ) {
 			$text = wp_kses( $text, $tcmp_allowed_html_tags );
 		}
-		$text = str_replace( '&lt;', '<', $text );
-		$text = str_replace( '&gt;', '>', $text );
-		$text = str_replace( '&amp;', '&', $text );
-		$text = str_replace( '&quot;', '"', $text );
-		$text = str_replace( '&#039;', "'", $text );
-		return $text;
+		return $this->decode_script_entities( $text );
+	}
+
+	// Decode HTML entities inside <script> and <style> element bodies only.
+	//
+	// Runs whether or not wp_kses() was applied above: a snippet saved while
+	// sanitization was enabled is stored already-encoded (Options::recursive_wp_kses()
+	// runs kses over the 'code' field on save), so it still needs decoding when
+	// rendered after "Skip Code Sanitization" is switched on.
+	private function decode_script_entities( $text ) {
+		// Cast before strpos(): passing null is deprecated on PHP 8.1+.
+		$text = (string) $text;
+		if ( false === strpos( $text, '&' ) ) {
+			return $text;
+		}
+		$result = preg_replace_callback(
+			'#(<(script|style)\b[^>]*>)(.*?)(</\2\s*>)#is',
+			array( $this, 'decode_script_entities_callback' ),
+			$text
+		);
+		// preg_replace_callback() returns null on a PCRE limit; fall back to the
+		// still-encoded text rather than dropping the snippet. Failing closed
+		// costs a broken snippet, never a reversed sanitization.
+		return is_null( $result ) ? $text : $result;
+	}
+
+	private function decode_script_entities_callback( $matches ) {
+		// strtr() with a map replaces each source sequence exactly once and does
+		// not rescan its own output, so '&amp;lt;' decodes to '&lt;' and cannot
+		// cascade into '<'.
+		$decoded = strtr(
+			$matches[3],
+			array(
+				'&amp;'  => '&',
+				'&lt;'   => '<',
+				'&gt;'   => '>',
+				'&quot;' => '"',
+				'&#039;' => "'",
+			)
+		);
+		return $matches[1] . $decoded . $matches[4];
 	}
 
 	private function insert_dynamic_conversion_values( $purchase, $text ) {
@@ -447,8 +512,7 @@ class TCMP_Manager {
 						}
 						$v = $a;
 					}
-					$v       = str_replace( "'", '', $v );
-					$v       = str_replace( '"', '', $v );
+					$v       = $this->esc_conversion_value( $v );
 					$buffer .= $v;
 
 					$previous = $end + strlen( $sep );
@@ -466,6 +530,68 @@ class TCMP_Manager {
 			}
 		}
 		return $buffer;
+	}
+
+	// Context-encode a value substituted into a conversion snippet. Placeholders
+	// such as @@EMAIL@@ / @@FULLNAME@@ / @@PRODUCTS@@ carry customer-derived text
+	// and are almost always dropped into JavaScript string literals inside the
+	// tag, but an admin-authored template may also place them in an HTML
+	// attribute or in HTML text.
+	//
+	// SUPPORTED CONTEXTS — a JavaScript string literal (template literals
+	// included), a *quoted* HTML attribute value, and HTML text. In those three
+	// the encoding below holds:
+	//
+	//   - Quotes are emitted as the JS unicode escapes \u0022 / \u0027 rather
+	//     than \" / \'. Inside a JS string these decode back to " and ' so the
+	//     value renders correctly, but NO literal quote ever reaches the HTML
+	//     parser, so the value cannot close (break out of) a quoted attribute.
+	//   - '<', '>' and '/' become \u003C / \u003E / \/ so the value cannot open
+	//     a new tag or a </script> break-out (harmless literals in HTML text).
+	//   - The backtick becomes \u0060 and '$' becomes \u0024. A template
+	//     literal needs both: escaping the backtick alone stops the value
+	//     *terminating* the literal, but '${' opens a substitution without
+	//     needing one, so a value of '${payload}' would still be evaluated.
+	//     \u0024 is not a substitution opener — the lexer recognises '${' in
+	//     the raw source, before escape sequences are processed.
+	//   - Backslash and CR/LF are escaped so they cannot alter the JS around them.
+	//
+	// '$' is escaped where whitespace and '=' are not, and the difference is
+	// ubiquity rather than principle: every ordinary name and product list
+	// contains spaces, so encoding those would corrupt the common case, whereas
+	// '$' is rare in the values these placeholders carry — the numeric ones are
+	// number_format()'d or intval()'d before they get here. In a JS string it
+	// costs nothing either, since \u0024 decodes straight back to '$'; only the
+	// two HTML contexts render it as the literal text \u0024, which is the same
+	// fidelity-for-safety trade already made for quotes and '<'.
+	//
+	// NOT SUPPORTED — an *unquoted* HTML attribute value, e.g.
+	// `<img src=p.gif alt=@@FULLNAME@@>`. Whitespace and '=' are deliberately left
+	// intact (encoding them would corrupt ordinary names and product lists in the
+	// two contexts where they are just text), so in an unquoted attribute a value
+	// like `foo onload=alert(1)` introduces a new attribute rather than staying a
+	// value. Quote placeholder attributes in the snippet template. Note this is a
+	// weaker boundary than it looks even so: write_codes() applies wp_kses() after
+	// substitution, and that whitelist permits onload — so kses does not backstop
+	// this. Still PRO-gated (license count > 0) and therefore unreachable in the
+	// free tier.
+	//
+	// Numeric values are unaffected. strtr() maps each source character exactly
+	// once, avoiding cascading double-escaping. (See F-10.)
+	private function esc_conversion_value( $v ) {
+		$replacements = array(
+			'\\'   => '\\\\',
+			'"'    => '\\u0022',
+			"'"    => '\\u0027',
+			'`'    => '\\u0060',
+			'$'    => '\\u0024',
+			'<'    => '\\u003C',
+			'>'    => '\\u003E',
+			'/'    => '\\/',
+			"\r"   => '\\r',
+			"\n"   => '\\n',
+		);
+		return strtr( (string) $v, $replacements );
 	}
 
 	//return snippets that match with options

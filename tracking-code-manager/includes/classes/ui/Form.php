@@ -375,7 +375,8 @@ class TCMP_Form {
 		$defaults = array();
 		$other    = $this->get_text_args( $args, $defaults );
 		?>
-			<input type="button" class="button tcmp-button" value="<?php $tcmp->lang->P( 'Delete?' ); ?>" onclick="if (confirm('<?php $tcmp->lang->P( 'Question.DeleteQuestion' ); ?>') ) window.location='<?php echo TCMP_TAB_MANAGER_URI; ?>&action=<?php echo esc_attr( $action ); ?>&id=<?php echo esc_attr( $id ); ?>&amp;tcmp_nonce=<?php echo esc_attr( wp_create_nonce( 'tcmp_delete' ) ); ?>';" <?php echo wp_kses( $other, array() ); ?> />
+			<?php $delete_url = TCMP_TAB_MANAGER_URI . '&action=' . rawurlencode( $action ) . '&id=' . rawurlencode( $id ) . '&tcmp_nonce=' . wp_create_nonce( 'tcmp_delete' ); ?>
+			<input type="button" class="button tcmp-button" value="<?php $tcmp->lang->P( 'Delete?' ); ?>" onclick="if (confirm('<?php $tcmp->lang->P( 'Question.DeleteQuestion' ); ?>') ) window.location='<?php echo esc_url( $delete_url ); ?>';" <?php echo wp_kses( $other, array() ); ?> />
 			&nbsp;
 		<?php
 	}

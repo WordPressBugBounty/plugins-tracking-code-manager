@@ -80,11 +80,13 @@ class TCMP_Tracking {
 		global $tcmp;
 
 		//retrieve blog info
-		$result['wp_url']         = home_url();
-		$result['wp_version']     = get_bloginfo( 'version' );
-		$result['wp_language']    = get_bloginfo( 'language' );
-		$result['wp_wpurl']       = get_bloginfo( 'wpurl' );
-		$result['wp_admin_email'] = get_bloginfo( 'admin_email' );
+		$result['wp_url']      = home_url();
+		$result['wp_version']  = get_bloginfo( 'version' );
+		$result['wp_language'] = get_bloginfo( 'language' );
+		$result['wp_wpurl']    = get_bloginfo( 'wpurl' );
+		// The administrator email address is intentionally NOT transmitted: it is
+		// personal data that is not needed for the usage statistics this payload
+		// collects. (See F-08 — data minimisation.)
 
 		$result['plugins'] = $this->getPluginData();
 		$result['theme']   = $this->getThemeData();

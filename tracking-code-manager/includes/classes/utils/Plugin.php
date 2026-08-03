@@ -211,7 +211,10 @@ class TCMP_Plugin {
 	}
 
 	function getActivePlugins( $ids ) {
-		return $this->getActivePlugins( $ids, true );
+		// Delegates to getPlugins() with $onlyActive = true. This used to call
+		// itself, which recursed until the process ran out of stack; it had no
+		// callers, so the fault stayed latent.
+		return $this->getPlugins( $ids, true );
 	}
 	function getPlugins( $ids, $onlyActive = true ) {
 		$array = array();
