@@ -98,37 +98,63 @@ class TCMP_Options {
 		$wp_session[ $key ] = $value;
 	}
 
-	//$_REQUEST
-	//However WP enforces its own logic - during load process wp_magic_quotes() processes variables to emulate magic quotes setting and enforces $_REQUEST to contain combination of $_GET and $_POST, no matter what PHP configuration says.
+	// Request-scoped state.
+	//
+	// These values are the plugin's own per-request scratch space: the post being
+	// rendered, the ids of snippets already written, the pending admin notices.
+	// Every one of them is produced by this plugin during the request and read
+	// back by it later in the same request. None is ever legitimately supplied by
+	// the client.
+	//
+	// getRequest() used to fall back to $_POST['TCM_' . $key] whenever a key was
+	// absent from the in-memory store, which turned all of that internal state
+	// into an unauthenticated input surface. That is CVE-2026-15180: a POST of
+	// TCM_ErrorMessages[0] landed in the admin notice box on the next page render.
+	// The fallback was already vestigial — nothing in the plugin has written to
+	// $_POST['TCM_*'] since 2.5.0 (RDU-1630) — so it is removed outright rather
+	// than gated behind a nonce, which would have kept an attacker-influenced
+	// path alive for no caller's benefit.
+	//
+	// Consequence for removeRequest(): unsetting the POST field is no longer a
+	// way to clear a key, so it now clears the in-memory entry. That also fixes
+	// the clean-up it was always meant to perform — writeMessages( clean: true )
+	// previously only ever removed a POST field that the plugin itself never set,
+	// so an internally queued notice survived its own render and could be emitted
+	// a second time by the next writeMessages() call in the same request
+	// (includes/admin/editor.php does exactly that).
 	private function removeRequest( $key ) {
-		$key = $this->get_key( $key );
-		if ( isset( $_POST[ $key ] ) ) {
-			unset( $_POST[ $key ] );
-		}
+		unset( $this->request_data[ $key ] );
 	}
 	private function getRequest( $key, $default = false ) {
 		$result = $default;
-		if ( isset($this->request_data[ $key ]) ) {
-				if ( is_object( $this->request_data[ $key ] ) ) {
-					$result = clone $this->request_data[ $key ];
-				} else {
-					$result = $this->request_data[ $key ];
-				}
-				$result = $this->recursive_wp_kses( $result );
-		} else {
-			$key    = $this->get_key( $key );
-			if ( isset( $_POST[ $key ] ) ) {
-				if ( is_object( $_POST[ $key ] ) ) {
-					$result = clone $_POST[ $key ];
-				} else {
-					$result = $_POST[ $key ];
-				}
-				$result = $this->recursive_wp_kses( $result );
+		if ( isset( $this->request_data[ $key ] ) ) {
+			if ( is_object( $this->request_data[ $key ] ) ) {
+				$result = clone $this->request_data[ $key ];
+			} else {
+				$result = $this->request_data[ $key ];
 			}
+			$result = $this->recursive_wp_kses( $result );
 		}
 		return $result;
 	}
 
+	// Sanitize a request-scoped value tree.
+	//
+	// The permissive whitelist in tcmp_free_wp_kses_tags_attrs.php exists for
+	// exactly one kind of value: a snippet body. Those are admin-authored
+	// tracking snippets and legitimately contain <script>, <iframe> and onload —
+	// that is the plugin's purpose. Applying the same whitelist to every other
+	// string, as this method used to, extended "may contain executable markup" to
+	// values that are never tracking code: notice text, names, ids.
+	//
+	// So the 'code' field keeps the permissive pass (still opt-out-able via Skip
+	// Code Sanitization, since a snippet may need markup the whitelist omits) and
+	// everything else gets wp_kses_post(), which keeps the formatting notices
+	// legitimately embed — <a href>, <strong>, <span style> — while dropping
+	// script/iframe/style and every on* handler.
+	//
+	// This mirrors the split TCMP_Utils::sanitize_post_or_get() already applies on
+	// the save path (F-06): permissive for 'code', plain text for the rest.
 	public function recursive_wp_kses( $array ) {
 		global $tcmp_allowed_html_tags;
 		foreach ( $array as $key => &$value ) {
@@ -139,7 +165,7 @@ class TCMP_Options {
 					$value = wp_kses( $value, $tcmp_allowed_html_tags );
 				}
 			} elseif ( is_string( $value ) ) {
-				$value = wp_kses( $value, $tcmp_allowed_html_tags );
+				$value = wp_kses_post( $value );
 			} else {
 				// do nothing ... could be a video or graphics object
 			}
